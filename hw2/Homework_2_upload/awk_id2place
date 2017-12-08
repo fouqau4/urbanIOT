@@ -1,0 +1,11 @@
+#!/usr/bin/awk
+BEGIN {
+	FS = ",";
+}
+{
+
+#	cmd = "echo "+$2;
+	a = "cat NYID_place | grep \"" $2 "\""
+	b = system( a );
+	print b;
+}
