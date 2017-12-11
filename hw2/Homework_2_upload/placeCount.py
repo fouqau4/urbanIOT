@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import json
+
 if __name__ == "__main__" :
 	with open( "NewYork_Data_place", "r" ) as f :
 		all = f.read().split( "\n" )
@@ -17,3 +19,5 @@ if __name__ == "__main__" :
 				user_info[uid][places[i]] += 1
 			else :
 				user_info[uid][places[i]] = 1
+	with open( "user_preference", "w" ) as f :
+		f.write( json.dumps( user_info, indent = 4, sort_keys = True ) )
