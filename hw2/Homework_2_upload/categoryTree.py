@@ -1,5 +1,3 @@
-#!/usr/bin/pyghon
-import json
 
 def categoryTree():
 	with open( "category", "r" ) as f :
@@ -11,6 +9,3 @@ def categoryTree():
 			if category.has_key( element ) == False :
 				category[element] = elements[0]
 	return category
-
-if __name__ == "__main__" :
-	categoryTree()

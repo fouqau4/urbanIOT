@@ -4,11 +4,14 @@ import json
 import categoryTree
 import id2place
 
+info_filename = "NYID_info.txt"
+output_filename = "category_preference"
+
 category = categoryTree.categoryTree()
 category['Caf'] = category['Caf\xe9s']
 category['Caf'] = category['Caf\xe9s']
 
-place = id2place.id2place()
+place = id2place.id2place( info_filename )
 
 def userInfo() :
 
@@ -32,5 +35,5 @@ def userInfo() :
 
 if __name__ == "__main__" :
 	user_info = userInfo()
-	with open( "user_preference_1", "w" ) as f :
+	with open( output_filename, "w" ) as f :
 		f.write( json.dumps( user_info, indent = 4, sort_keys = True ) )

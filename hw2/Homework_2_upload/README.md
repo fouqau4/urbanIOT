@@ -1,0 +1,3 @@
+- category : cat category_tree.csv | cut -d, -f1,3,5,7 > category
+- make a modification to file "category"
+- NYID_place : cat NYID_into.txt | cut -f1,4 | tr '\t' ',' > NYID_place
