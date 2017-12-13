@@ -22,27 +22,41 @@ _categories = [
 _ct = categoryTree.categoryTree()
 
 def userFeatures() :
-	# create preference dictionary about level 1 categories of all users
+	"""
+	preference dictionary about level 1 categories of all users
+	cp['0'] : perference dictionary during weekdays
+	cp['1'] : perference dictionary during holidays
+	"""
 	cp = categoryPreference.categoryPreference()
 
-	all_user_feature = []
-	for user_id in cp :
-		# initialize category counter
-		category_counter = {}
-		for term in _categories :
-			if cp[user_id].has_key( term ) == True :
-				category_counter[term] = cp[user_id][term]
-			else :
-				category_counter[term] = 0
+	"""
+	dictionary of feature matrice of users
+	user_features['0'] : feature matrix during weekdays
+	user_features['1'] : feature matrix during holidays
+	"""
+	user_features = {}
 
-		holiday = [1]
-		length = [0]
-		temporal = [1] * 24
-		# append feature list of current user to all_user_feature list
-		all_user_feature.append( holiday + length + temporal + category_counter.values() )
+	# loop through cp['0'] and cp['1']
+	for day in cp :
+		all_user_feature = []
+		
+		for user_id in cp[day] :
+			# initialize category counter
+			category_counter = {}
+			for term in _categories :
+				if cp[day][user_id].has_key( term ) == True :
+					category_counter[term] = cp[day][user_id][term]
+				else :
+					category_counter[term] = 0
 
-	# transform features from 2-D list to 2-D matrix
-	user_features = np.array( all_user_feature )
+			holiday = [1]
+			length = [0]
+			temporal = [1] * 24
+			# append feature list of current user to all_user_feature list
+			all_user_feature.append( holiday + length + temporal + category_counter.values() )
+
+		# transform features from 2-D list to 2-D matrix
+		user_features[day] = np.array( all_user_feature )
 
 	return user_features
 
@@ -58,7 +72,7 @@ def routeFeatures() :
 	all_route_feature = []
 
 	for data in all_test_data[:-1] :
-		# initialize the dictionary
+		# initialize the category counter dictionary
 		category_counter = {}
 		for term in _categories :
 			category_counter[term] = 0
@@ -67,8 +81,9 @@ def routeFeatures() :
 		size = len( route )
 		for i in range( 2, size, 2 ) :
 			"""
-			1. map route_id to levelN_name
-			2. map levelN_name to level1_name
+			update the category counter :
+			1. place[route[i]] : map route_id to levelN_name
+			2. _ct[place[route[i]]] : map levelN_name to level1_name
 			3. update the level 1 category counter
 			"""
 			category_counter[_ct[place[route[i]]]] += 1
