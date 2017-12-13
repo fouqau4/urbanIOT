@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import id2place
+import id2X
 import categoryTree
 import categoryPreference
 
@@ -66,8 +66,10 @@ def routeFeatures() :
 		all_test_data = f.read().split( "\r\n" )
 
 	# create id-levelN_name dictionary
-	place = id2place.id2place( "BSID_info.txt" )
-	place.update( id2place.id2place( "NYID_info.txt" ) )
+	place, coordinate = id2X.id2X( "BSID_info.txt" )
+	p, c = id2X.id2X( "NYID_info.txt" )
+	place.update( p )
+	coordinate.update( c )
 
 	all_route_feature = []
 
@@ -101,3 +103,6 @@ def routeFeatures() :
 if __name__ == "__main__" :
 	user_features = userFeatures()
 	route_features = routeFeatures()
+	result = {}
+	for day in user_features :
+		result[day] = np.dot( route_features, user_features[day].T )
