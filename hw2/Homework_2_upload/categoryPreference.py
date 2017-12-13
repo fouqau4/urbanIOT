@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import json
+
 import categoryTree
 import id2place
 
@@ -8,17 +9,16 @@ _info_filename = "NYID_info.txt"
 _output_filename = "category_preference"
 
 _category = categoryTree.categoryTree()
-_category['Caf'] = _category['Caf\xe9s']
-_category['Caf'] = _category['Caf\xe9s']
 
 _place = id2place.id2place( _info_filename )
 
 def categoryPreference() :
-
+	# load data from file
 	with open( "NewYork_Data.txt", "r" ) as f :
 		all = f.read().split( "\n" )
+
 	preference = {}
-	for line in all[:-2] :
+	for line in all[:-1] :
 		uid, route = line.split( ",", 1 )
 		uid = uid[0:-2]
 		if preference.has_key( uid ) == False :

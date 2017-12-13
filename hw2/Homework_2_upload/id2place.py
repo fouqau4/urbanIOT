@@ -4,7 +4,7 @@ def id2place( info_filename ) :
 	with open( info_filename, "r" ) as f:
 		all = f.read().split( "\n" )
 		# The last line is empty string
-		for current in all[0:-2] :
+		for current in all[0:-1] :
 			id, _, _, place, _ = current.split( "\t" )
 			dict[id] = place
 	return dict
