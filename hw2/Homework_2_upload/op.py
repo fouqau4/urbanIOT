@@ -74,13 +74,23 @@ def routeFeatures() :
 	all_route_feature = []
 
 	for data in all_test_data[:-1] :
+		route = data.split( "," )
+		size = len( route )
+
+		# create length preference
+
+		# create temporal preference
+		temporal = [0] * 24
+		for i in range( 3, size, 2 ) :
+			temporal[int( route[i] )] += 1
+
+		# create category preference
+
 		# initialize the category counter dictionary
 		category_counter = {}
 		for term in _categories :
 			category_counter[term] = 0
 
-		route = data.split( "," )
-		size = len( route )
 		for i in range( 2, size, 2 ) :
 			"""
 			update the category counter :
@@ -90,9 +100,8 @@ def routeFeatures() :
 			"""
 			category_counter[_ct[place[route[i]]]] += 1
 
-		holiday = [1]
+		holiday = [float(route[1])]
 		length = [0]
-		temporal = [1] * 24
 		# append feature list of current route to all_route_feature list
 		all_route_feature.append( holiday + length + temporal + category_counter.values() )
 
@@ -103,6 +112,6 @@ def routeFeatures() :
 if __name__ == "__main__" :
 	user_features = userFeatures()
 	route_features = routeFeatures()
-	result = {}
-	for day in user_features :
-		result[day] = np.dot( route_features, user_features[day].T )
+#	result = {}
+#	for day in user_features :
+#		result[day] = np.dot( route_features, user_features[day].T )
