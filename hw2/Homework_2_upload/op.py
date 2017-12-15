@@ -5,7 +5,9 @@ import numpy as np
 import id2X
 import categoryTree
 import getPreference
-import haversine
+import distance
+
+_test_data_file = "Boston_data/validation_set1.csv"
 
 _categories = [
 	"Arts & Entertainment",
@@ -20,13 +22,16 @@ _categories = [
 	"Travel & Transport"
 ]
 
-_ct = categoryTree.categoryTree()
+_user_list = {}
+_user_list['0'] = []
+_user_list['1'] = []
 
 def userFeatures() :
 	"""
 	preference dictionary about level 1 categories of all users
 	preference['0'] : perference dictionary during weekdays
 	preference['1'] : perference dictionary during holidays
+	preference[holiday][uid]['length'] : length preference of user with uid
 	preference[holiday][uid]['temporal'] : temporal preference of user with uid
 	preference[holiday][uid]['category'] : category preference of user with uid
 	"""
@@ -45,11 +50,13 @@ def userFeatures() :
 		all_user_feature = []
 		
 		for uid in preference[day] :
+			_user_list[day].append( uid )
 			# length preference :
-			length = [0]
+			length = [preference[day][uid]['length']]
 
 			# temporal preference :
-			temporal = preference[day][uid]['temporal']
+			temporal = np.array( preference[day][uid]['temporal'] )
+			temporal_normalized = ( temporal  / temporal.max() ).tolist()
 
 			# category preference :
 
@@ -61,18 +68,24 @@ def userFeatures() :
 				else :
 					category_counter[term] = 0
 
-			holiday = [1]
+			category = np.array( category_counter.values() )
+			category_normalized = ( category / float( category.max() ) ).tolist()
 			# append feature list of current user to all_user_feature list
-			all_user_feature.append( holiday + length + temporal + category_counter.values() )
+			all_user_feature.append( temporal_normalized + category_normalized )
+#			all_user_feature.append( length + temporal_normalized + category_normalized )
 
 		# transform features from 2-D list to 2-D matrix
 		user_features[day] = np.array( all_user_feature )
 
+
 	return user_features
 
+_id = []
 def routeFeatures() :
+	ct = categoryTree.categoryTree()
+
 	# load test data from file
-	with open( "Boston_data/testfile_set1.csv", "r" ) as f :
+	with open( _test_data_file, "r" ) as f :
 		all_test_data = f.read().split( "\r\n" )
 
 	# create id-levelN_name dictionary
@@ -85,15 +98,16 @@ def routeFeatures() :
 
 	for data in all_test_data[:-1] :
 		route = data.split( "," )
+		_id.append( route[0] )
 		size = len( route )
 
 		# create length preference :
 
-		length = 0
+		length = [float( 0 )]
 		# calculate the distances between multiple places
 		if size >= 6 :
 			for i in range( 2, size - 2, 2 ) :
-				length += haversine.distance( float( coordinate[route[i]][0] ), float( coordinate[route[i]][1] ), float( coordinate[route[i + 2]][0] ), float( coordinate[route[i + 2]][1] ) )
+				length[0] += distance.distance( float( coordinate[route[i]][0] ), float( coordinate[route[i]][1] ), float( coordinate[route[i + 2]][0] ), float( coordinate[route[i + 2]][1] ) )
 
 		# create temporal preference :
 		temporal = [0] * 24
@@ -111,14 +125,15 @@ def routeFeatures() :
 			"""
 			update the category counter :
 			1. place[route[i]] : map route_id to levelN_name
-			2. _ct[place[route[i]]] : map levelN_name to level1_name
+			2. ct[place[route[i]]] : map levelN_name to level1_name
 			3. update the level 1 category counter
 			"""
-			category_counter[_ct[place[route[i]]]] += 1
+			category_counter[ct[place[route[i]]]] += 1
+		category = category_counter.values()
 
-		holiday = [float( route[1] )]
 		# append feature list of current route to all_route_feature list
-		all_route_feature.append( holiday + [length] + temporal + category_counter.values() )
+		all_route_feature.append( temporal + category )
+#		all_route_feature.append( length + temporal + category )
 
 
 	# transform features from 2-D list to 2-D matrix
@@ -128,10 +143,34 @@ def routeFeatures() :
 def predict( user_features, route_features ) :
 	result = {}
 	for day in user_features :
+		"""
+		length_normalized = user_features[day][:,0]
+		route_length_normalized = route_features[:,0]
+		route_length_normalized = ( route_length_normalized - length_normalized.mean() ) / ( length_normalized.max() - length_normalized.min() )
+		length_normalized = ( length_normalized - length_normalized.mean() ) / ( length_normalized.max() - length_normalized.min() )
+		"""
 		result[day] = np.dot( route_features, user_features[day].T )
 	return result
 
 if __name__ == "__main__" :
 	user_features = userFeatures()
 	route_features = routeFeatures()
+	_user_list_a = {}
+	_user_list_a['0'] = np.array( _user_list['0'] )
+	_user_list_a['1'] = np.array( _user_list['1'] )
 	result = predict( user_features, route_features )
+
+	rate = []
+	for i in range( len( _id ) ) :
+		print "\n\n";ans=_id[i];
+#		print "uid   : ", _user_list_a[h][result[h][i].argsort()];
+#		print "score : ", result[h][i,result[h][i].argsort()];
+		print "no. ", i
+		print "ans :", ans
+		ratio = []
+		for h in [ '0','1'] :
+			pos = np.argwhere( _user_list_a[h][result[h][i].argsort()]==ans )
+			if pos.shape != (0,1) :
+				ratio.append( (len( _user_list_a[h] ) - pos[0][0]) / float(len( _user_list_a[h] )) )
+		rate.append( min( ratio ) )
+		print "ratio : ", min( ratio )
