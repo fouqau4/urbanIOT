@@ -71,11 +71,12 @@ def userFeatures() :
 			category = np.array( category_counter.values() )
 			category_normalized = ( category / float( category.max() ) ).tolist()
 			# append feature list of current user to all_user_feature list
-			all_user_feature.append( temporal_normalized + category_normalized )
-#			all_user_feature.append( length + temporal_normalized + category_normalized )
+#			all_user_feature.append( temporal_normalized + category_normalized )
+			all_user_feature.append( length + temporal_normalized + category_normalized )
 
 		# transform features from 2-D list to 2-D matrix
 		user_features[day] = np.array( all_user_feature )
+		user_features[day][:,0] *= 1
 
 
 	return user_features
@@ -132,8 +133,8 @@ def routeFeatures() :
 		category = category_counter.values()
 
 		# append feature list of current route to all_route_feature list
-		all_route_feature.append( temporal + category )
-#		all_route_feature.append( length + temporal + category )
+#		all_route_feature.append( temporal + category )
+		all_route_feature.append( length + temporal + category )
 
 
 	# transform features from 2-D list to 2-D matrix
@@ -149,7 +150,16 @@ def predict( user_features, route_features ) :
 		route_length_normalized = ( route_length_normalized - length_normalized.mean() ) / ( length_normalized.max() - length_normalized.min() )
 		length_normalized = ( length_normalized - length_normalized.mean() ) / ( length_normalized.max() - length_normalized.min() )
 		"""
-		result[day] = np.dot( route_features, user_features[day].T )
+#		result[day] = np.dot( route_features, user_features[day].T )
+#		"""
+		result[day] = []
+		for i in range( len( route_features ) ) :
+			# euclidean distance
+#			result[day].append( ( ( user_features[day] - route_features[i] ) ** 2 ).sum(1) )
+			# cosine similarity
+			result[day].append( np.dot( route_features[i] / ( route_features[i] ** 2 ).sum(),\
+										( user_features[day] / np.dot( np.array( ( user_features[day] ** 2 ).sum( 1 ), ndmin = 2 ).T, np.array( [1] * 35, ndmin = 2 ) ) ).T  ) )
+#		"""
 	return result
 
 if __name__ == "__main__" :
@@ -162,15 +172,18 @@ if __name__ == "__main__" :
 
 	rate = []
 	for i in range( len( _id ) ) :
-		print "\n\n";ans=_id[i];
+#		print "\n\n";
+		ans = _id[i];
 #		print "uid   : ", _user_list_a[h][result[h][i].argsort()];
 #		print "score : ", result[h][i,result[h][i].argsort()];
-		print "no. ", i
-		print "ans :", ans
+#		print "no. ", i
+#		print "ans :", ans
 		ratio = []
 		for h in [ '0','1'] :
 			pos = np.argwhere( _user_list_a[h][result[h][i].argsort()]==ans )
 			if pos.shape != (0,1) :
 				ratio.append( (len( _user_list_a[h] ) - pos[0][0]) / float(len( _user_list_a[h] )) )
 		rate.append( min( ratio ) )
-		print "ratio : ", min( ratio )
+#		print "ratio : ", min( ratio )
+	rate = np.array( rate )
+	print rate.mean()
